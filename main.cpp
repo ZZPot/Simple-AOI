@@ -4,6 +4,9 @@
 #include <opencv2/ml.hpp>
 #include "FeatureDetector.h"
 #include "common.h"
+#include <iostream>
+
+#pragma warning(disable: 4267 4244)
 
 using namespace cv;
 using namespace cv::ml;
@@ -12,14 +15,12 @@ using namespace cv::ml;
 #define FEATURES_COUNT	3
 #define TEST_IMAGE	"1.jpg"
 
-
-#define TRAIN_MODEL
-
-
 std::vector<float> ExtractFeatures(Obj2d obj);
 Ptr<SVM> TrainModel(std::vector<std::string> dir_names);
 void Predict(Ptr<SVM> svm, std::vector<Obj2d>& objects); // initially field tag == -1
 float TestModel(Ptr<SVM> svm, std::vector<Obj2d>& objects); // initially field tag != -1
+
+//#define TRAIN_MODEL
 
 int main()
 {
@@ -33,21 +34,25 @@ int main()
 	Ptr<SVM> svm;
 #ifdef TRAIN_MODEL
 	svm = TrainModel(dir_names);
-	svm->save(model_file);
 	// save
+	svm->save(model_file);
 #else
 	// load
+	svm = SVM::load<SVM>(model_file);
 	Mat test_img = imread(TEST_IMAGE);
 	Mat test_img_gray;
 	cvtColor(test_img, test_img_gray, CV_BGR2GRAY);
 	test_img_gray = Binarize(test_img_gray);
 	std::vector<Obj2d> objects = FindObjects(test_img_gray, std::vector<type_condition>(), std::vector<int>(), RETR_EXTERNAL);
 	Predict(svm, objects);
+	std::vector<Scalar> colorss = {Scalar::all(255), Scalar::all(0)};
 	for(auto& obj: objects)
 	{
 		DrawRRect(obj.r_rect, test_img, rect_colors[obj.tag]);
+		putText(test_img, obj_names[obj.tag], obj.r_rect.center, FONT_HERSHEY_SIMPLEX, 0.75, rect_colors[obj.tag], 1, LINE_AA);
 	}
 		SHOW_N_WAIT(test_img);
+	imwrite("result.png", test_img);
 #endif
 	return 0;
 }
@@ -105,7 +110,22 @@ Ptr<SVM> TrainModel(std::vector<std::string> dir_names)
 }
 void Predict(Ptr<SVM> svm, std::vector<Obj2d>& objects)
 {
-
+	std::vector<float> features;
+	//	std::vector<float> tags; // for predict it should be float
+	for(auto& obj: objects)
+	{
+		std::vector<float> temp = ExtractFeatures(obj);
+		features.insert(features.end(), temp.begin(), temp.end());
+		//tags.push_back(obj.tag);
+	}
+	Mat features_data(features.size()/FEATURES_COUNT, FEATURES_COUNT, CV_32FC1, &features[0]);
+	//Mat tags_data(tags.size(), 1, CV_32FC1, &tags[0]);
+	Mat predicted_tags;
+	svm->predict(features_data, predicted_tags);
+	for(unsigned i = 0; i < objects.size(); i++)
+	{
+		objects[i].tag = predicted_tags.at<float>(i);
+	}
 }
 float TestModel(Ptr<SVM> svm, std::vector<Obj2d>& objects)
 {
