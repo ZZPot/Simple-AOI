@@ -2,8 +2,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/ml.hpp>
-#include "FeatureDetector.h"
-#include "common.h"
+#include "FeatureDetector/FeatureDetector.h"
+#include "files/files.h"
 #include <iostream>
 
 #pragma warning(disable: 4267 4244)

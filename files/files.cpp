@@ -1,4 +1,4 @@
-#include "common.h"
+#include "files.h"
 #include <shlobj.h>
 
 BOOL IsDirectory(std::string file)

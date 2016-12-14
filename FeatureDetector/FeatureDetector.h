@@ -62,3 +62,9 @@ void DrawRRect(cv::RotatedRect r_rect, cv::Mat& img, cv::Scalar color = cv::Scal
 
 cv::Mat Binarize(cv::Mat img);
 cv::Scalar RandomColor(cv::RNG& rng);
+
+Obj2d RotateObj(Obj2d& obj, double angle);
+
+double VSymmetry(cv::Mat img);
+double HSymmetry(cv::Mat img);
+double VHSymmetry(cv::Mat img);
