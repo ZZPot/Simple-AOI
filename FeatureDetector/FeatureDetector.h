@@ -36,7 +36,7 @@ struct type_condition
 #define FEATURE_CHECK_SQUARE		0x0010 
 #define FEATURE_CHECK_SQUARE_RATIO	0x0020
 #define FEATURE_CHECK_SIZE_RATIO	0x0040
-#define FEATURE_CHECK_BOUNDING_SIZE_RATIO	0x0080
+#define FEATURE_CHECK_BOUNDING_SIZE_RATIO	0x0080 // height/width
 #define FEATURE_CHECK_ANGLE			0x0100
 #define FEATURE_CHECK_CENTER		0x0200
 
@@ -47,7 +47,7 @@ struct type_condition
 
 bool CheckFeatures(Obj2d* obj, type_condition condition, int features_to_check);
 void GetObj2d(Obj2d* obj);
-std::vector<Obj2d> FindObjects(cv::Mat img, std::vector<type_condition> conditions, std::vector<int> features_to_check, int mode, int level_limit = -1);
+std::vector<Obj2d> FindObjects(cv::Mat img, std::vector<type_condition> conditions, std::vector<int> features_to_check, int mode, int level_limit = -1, cv::Point offset = cv::Point(0, 0));
 void DrawContours(	std::vector<std::vector<contour_type>> contours, 
 					std::vector<cv::Scalar> colors, cv::Mat& img,
 					cv::Point offset = cv::Point(), int level_limit = -1);
