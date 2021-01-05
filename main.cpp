@@ -16,7 +16,7 @@ using namespace cv::ml;
 #define TEST_IMAGE	"1.jpg"
 
 std::vector<float> ExtractFeatures(Obj2d obj);
-Ptr<SVM> TrainModel(std::vector<std::string> dir_names);
+Ptr<SVM> TrainModel(std::vector<std::tstring> dir_names);
 void Predict(Ptr<SVM> svm, std::vector<Obj2d>& objects); // initially field tag == -1
 float TestModel(Ptr<SVM> svm, std::vector<Obj2d>& objects); // initially field tag != -1
 
@@ -28,8 +28,8 @@ int main()
 									Scalar(0, 0, 255),
 									Scalar(0, 255, 0),
 									Scalar(255, 0, 255)};
-	std::vector<std::string> dir_names = {"images/0", "images/1", "images/2"};
-	std::vector<std::string> obj_names = {"pick", "screw", "coin"};
+	std::vector<std::tstring> dir_names = {_T("images/0"), _T("images/1"), _T("images/2") };
+	std::vector<std::tstring> obj_names = { _T("pick"), _T("screw"), _T("coin") };
 	cv::String model_file = "model.xml";
 	Ptr<SVM> svm;
 #ifdef TRAIN_MODEL
@@ -38,18 +38,22 @@ int main()
 	svm->save(model_file);
 #else
 	// load
-	svm = SVM::load<SVM>(model_file);
+	svm = SVM::load(model_file);
 	Mat test_img = imread(TEST_IMAGE);
 	Mat test_img_gray;
-	cvtColor(test_img, test_img_gray, CV_BGR2GRAY);
+	cvtColor(test_img, test_img_gray, COLOR_BGR2GRAY);
 	test_img_gray = Binarize(test_img_gray);
 	std::vector<Obj2d> objects = FindObjects(test_img_gray, std::vector<type_condition>(), std::vector<int>(), RETR_EXTERNAL);
+
+	//DrawContours(objects[0].contours, rect_colors, test_img_gray);
+	//SHOW_N_WAIT(test_img_gray);
+
 	Predict(svm, objects);
 	std::vector<Scalar> colorss = {Scalar::all(255), Scalar::all(0)};
 	for(auto& obj: objects)
 	{
 		DrawRRect(obj.r_rect, test_img, rect_colors[obj.tag]);
-		putText(test_img, obj_names[obj.tag], obj.r_rect.center, FONT_HERSHEY_SIMPLEX, 0.75, rect_colors[obj.tag], 1, LINE_AA);
+		putText(test_img, TcharToChar(obj_names[obj.tag].c_str(), CP_ACP), obj.r_rect.center, FONT_HERSHEY_SIMPLEX, 0.75, rect_colors[obj.tag], 1, LINE_AA);
 	}
 		SHOW_N_WAIT(test_img);
 	imwrite("result.png", test_img);
@@ -68,17 +72,17 @@ std::vector<float> ExtractFeatures(Obj2d obj)
 	return res;
 }
 
-Ptr<SVM> TrainModel(std::vector<std::string> dir_names)
+Ptr<SVM> TrainModel(std::vector<std::tstring> dir_names)
 {
 	std::vector<Obj2d> objects;
 	for(unsigned i = 0; i < dir_names.size(); i++)
 	{
 		Collect files; 
-		CrawlFolder(dir_names[i], (unsigned)-1, 0, &files);
+		CrawlFolder(dir_names[i].c_str(), (unsigned)-1, 0, &files);
 		for(auto file_name: files.file_names)
 		{
 			std::vector<Obj2d> objects_temp = FindObjects(
-										Binarize(imread(file_name, IMREAD_GRAYSCALE)),
+										Binarize(imread(TcharToChar(file_name.c_str(), CP_ACP), IMREAD_GRAYSCALE)),
 										std::vector<type_condition>(), std::vector<int>(),
 										RETR_EXTERNAL, 0);
 			for(auto& obj: objects_temp)
